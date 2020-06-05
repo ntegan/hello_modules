@@ -1,2 +1,5 @@
 output/
 output/*
+modules/*.ko
+modules/output/
+modules/output/*

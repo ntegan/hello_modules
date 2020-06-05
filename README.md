@@ -58,4 +58,18 @@ Run with
 bash runqemu.sh
 ```
 
+##### Running modules
+Modules should be in the `home` directory of the rootfs,  
+```
+Type exit when done.
+/ # cd
+/home # ls
+hello.ko
+/home # insmod hello.ko 
+[   13.296718] hello, world
+/home # 
+```
+
+
+
 

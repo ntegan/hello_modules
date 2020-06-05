@@ -40,6 +40,7 @@ make_the_kernel() {
     do
         echo "Elapsed Time: $((SECONDS / 60)) min $((SECONDS % 60)) secs"
         line=$(tail -n 1 $A 2>/dev/null)
+        line=$(crop_to_term_width "$line")
         [ "$line" == "" ] && echo ""
         [ ! "$line" == "" ] && echo -e "\r\e[0K$line"
         sleep 1
@@ -59,6 +60,7 @@ make_the_kernel() {
     do
         echo "Elapsed Time: $((SECONDS / 60)) min $((SECONDS % 60)) secs"
         line=$(tail -n 1 $A 2>/dev/null)
+        line=$(crop_to_term_width "$line")
         [ "$line" == "" ] && echo ""
         [ ! "$line" == "" ] && echo -e "\r\e[0K$line"
         sleep 1
@@ -85,6 +87,7 @@ make_the_root() {
     do
         echo "Elapsed Time: $((SECONDS / 60)) min $((SECONDS % 60)) secs"
         line=$(tail -n 1 $A )
+        line=$(crop_to_term_width "$line")
         [ "$line" == "" ] && echo ""
         [ ! "$line" == "" ] && echo -e "\r\e[0K$line"
         sleep 1
@@ -107,6 +110,18 @@ re_wind() {
     # https://stackoverflow.com/questions/11283625/overwrite-last-line-on-terminal
     [ "$1" == "" ] && return
     echo -en "\e[$1A"
+}
+make_modules() {
+    # Make modules in modules folder
+    (cd modules && bash make_modules.sh)
+    # Copy them to the rootfs
+    cp modules/*.ko mkroot/output/host/root/home
+}
+crop_to_term_width() {
+    # tput cols and lines
+    NUM=$(tput cols)
+    [ "$1" == "" ] && return
+    echo "$1" | cut -c -$NUM
 }
 
 
@@ -134,11 +149,13 @@ RET=$?
 [ $RET == 2 ] && make_the_root
 
 # Make the kernel modules and put in rootfs
+make_modules
 
 # Make the root cpio.gz archive
-have_root_archive
-RET=$?
-[ $RET == 2 ] && make_the_root_archive
+#have_root_archive
+#RET=$?
+#[ $RET == 2 ] && make_the_root_archive
+make_the_root_archive
 
 
 
