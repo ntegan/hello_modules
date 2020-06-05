@@ -13,11 +13,18 @@ have_kernel() {
         return 1
     [ ! -f $KERNEL ] && return 2
 }
+have_root() {
+    ROOT_DIR="mkroot/output/host/root"
+    [ ! -d $ROOT_DIR ] && return 2
+}
+have_root_archive() {
+    ROOT_FILE="mkroot/output/host/root.cpio.gz"
+    [ ! -f $ROOT_FILE ] && return 2
+}
 make_the_kernel() {
     # Save output in file so don't clog up this terminal
     mkdir output 1>/dev/null 2>/dev/null
 
-    clear
 
     # Make defconfig
     A=output/linux_defconfig.out
@@ -59,6 +66,37 @@ make_the_kernel() {
         re_wind 2
     done
 }
+make_the_root() {
+    # Save output in file so don't clog up this terminal
+    mkdir output 1>/dev/null 2>/dev/null
+
+
+    # Make defconfig
+    A=output/mkroot.out
+    B=output/mkroot.err
+    rm -f $A $B
+    echo Don\'t see a root/initramfs, making
+    sleep 1
+    SECONDS=0
+    cd mkroot && ./mkroot.sh 1>../$A 2>../$B &
+    PID=$!
+    echo making initramfs/rootfs PID: $PID
+    while true
+    do
+        echo "Elapsed Time: $((SECONDS / 60)) min $((SECONDS % 60)) secs"
+        line=$(tail -n 1 $A )
+        [ "$line" == "" ] && echo ""
+        [ ! "$line" == "" ] && echo -e "\r\e[0K$line"
+        sleep 1
+        pid_exists $PID || break;
+        re_wind 2
+    done
+}
+make_the_root_archive() {
+    echo making the root archive
+    (cd mkroot/output/host/root && 
+        find . | cpio -o -H newc | gzip > ../root.cpio.gz)
+}
 pid_exists() {
     # https://stackoverflow.com/questions/5207013/bash-check-if-pid-exists
     [ "$1" == "" ] && return 1
@@ -85,10 +123,24 @@ re_wind() {
 #| |  | | (_| | | | | |
 #|_|  |_|\__,_|_|_| |_|
 
+# Check if kernel is compiled, make it otherwise
 have_kernel
 RET=$?
-
 [ $RET == 2 ] && make_the_kernel
+
+# Check if have a root to build out initramfs with
+have_root
+RET=$?
+[ $RET == 2 ] && make_the_root
+
+# Make the kernel modules and put in rootfs
+
+# Make the root cpio.gz archive
+have_root_archive
+RET=$?
+[ $RET == 2 ] && make_the_root_archive
+
+
 
                       
                                              
