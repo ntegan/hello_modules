@@ -48,6 +48,12 @@ making the root archive
 6152 blocks
 ```
 
+##### Alternative
+Ubuntu (and other distributions) provide an archive of their base rootfs   
+[check here](http://cdimage.ubuntu.com/ubuntu-base/releases/)   
+
+
+
 ### Booting
 There is now a bootable linux system with  
 kernel: `linux/arch/$(uname -m)/boot/bzImage`  
