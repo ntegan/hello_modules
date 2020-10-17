@@ -1,6 +1,6 @@
 #!/bin/bash
 KERNEL=linux/arch/$(uname -m)/boot/bzImage
-INITRAMFS=mkroot/output/host/root.cpio.gz
+INITRAMFS=mkroot/root.cpio.gz
 
 [ ! -f $KERNEL ] && echo "Uh oh, no kernel found at $KERNEL" && exit 1
 [ ! -f $INITRAMFS ] && echo "Uh oh, no rootfs found at $INITRAMFS" && exit 2
@@ -12,7 +12,7 @@ qemu-system-x86_64 \
     -no-reboot \
     -kernel $KERNEL \
     -initrd $INITRAMFS \
-    -append "panic=1 console=ttyS0 "
+    -append "panic=1 console=ttyS0 init=/bin/sh"
 
 
 

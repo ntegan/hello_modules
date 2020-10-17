@@ -14,11 +14,11 @@ have_kernel() {
     [ ! -f $KERNEL ] && return 2
 }
 have_root() {
-    ROOT_DIR="mkroot/output/host/root"
+    ROOT_DIR="mkroot/root"
     [ ! -d $ROOT_DIR ] && return 2
 }
 have_root_archive() {
-    ROOT_FILE="mkroot/output/host/root.cpio.gz"
+    ROOT_FILE="mkroot/root.cpio.gz"
     [ ! -f $ROOT_FILE ] && return 2
 }
 make_the_kernel() {
@@ -69,35 +69,18 @@ make_the_kernel() {
     done
 }
 make_the_root() {
-    # Save output in file so don't clog up this terminal
-    mkdir output 1>/dev/null 2>/dev/null
-
-
-    # Make defconfig
-    A=output/mkroot.out
-    B=output/mkroot.err
-    rm -f $A $B
-    echo Don\'t see a root/initramfs, making
-    sleep 1
-    SECONDS=0
-    cd mkroot && ./mkroot.sh 1>../$A 2>../$B &
-    PID=$!
-    echo making initramfs/rootfs PID: $PID
-    while true
-    do
-        echo "Elapsed Time: $((SECONDS / 60)) min $((SECONDS % 60)) secs"
-        line=$(tail -n 1 $A )
-        line=$(crop_to_term_width "$line")
-        [ "$line" == "" ] && echo ""
-        [ ! "$line" == "" ] && echo -e "\r\e[0K$line"
-        sleep 1
-        pid_exists $PID || break;
-        re_wind 2
-    done
+    (
+    cd mkroot
+    mkdir root
+    cd root
+    mkinitcpio -g root.img
+    zcat root.img | while cpio -i; do :; done
+    rm root.img
+)
 }
 make_the_root_archive() {
     echo making the root archive
-    (cd mkroot/output/host/root && 
+    (cd mkroot/root && 
         find . | cpio -o -H newc | gzip > ../root.cpio.gz)
 }
 pid_exists() {
@@ -115,7 +98,8 @@ make_modules() {
     # Make modules in modules folder
     (cd modules && bash make_modules.sh)
     # Copy them to the rootfs
-    cp modules/*.ko mkroot/output/host/root/home
+    mkdir -p mkroot/root/modds
+    cp modules/*.ko mkroot/root/modds
 }
 crop_to_term_width() {
     # tput cols and lines
