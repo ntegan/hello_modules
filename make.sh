@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 KERNEL=linux/arch/$(uname -m)/boot/bzImage
 
 # _____                 _   _                 

@@ -1,5 +1,6 @@
 #!/bin/bash
 KERNEL=linux/arch/$(uname -m)/boot/bzImage
+KERNEL=/boot/vmlinuz-linux
 INITRAMFS=mkroot/root.cpio.gz
 
 [ ! -f $KERNEL ] && echo "Uh oh, no kernel found at $KERNEL" && exit 1
@@ -8,11 +9,14 @@ INITRAMFS=mkroot/root.cpio.gz
 # Special thanks to Landley for his mkroot project
 
 qemu-system-x86_64 \
-    -nographic \
     -no-reboot \
+    -nographic \
+    -enable-kvm \
     -kernel $KERNEL \
     -initrd $INITRAMFS \
-    -append "panic=1 console=ttyS0 init=/bin/sh"
+    -hda "a.qcow2" \
+    -append "panic=1 console=ttyS0 root=/dev/hda"
+    #-append "panic=1 console=ttyS0 init=/bin/sh "
 
 
 
